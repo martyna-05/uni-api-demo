@@ -4,24 +4,19 @@ using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Add services ---
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- Configure Kestrel to listen on all IPs ---
-builder.WebHost.ConfigureKestrel(serverOptions =>
+//Configure Kestrel to listen on all IPs
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
+builder.WebHost.ConfigureKestrel(options =>
 {
-    // HTTP
-    serverOptions.ListenAnyIP(5127);
-
-    // HTTPS (requires dev certificate)
-    serverOptions.ListenAnyIP(7148, listenOptions =>
-    {
-        listenOptions.UseHttps();
-
-    });
+    options.ListenAnyIP(int.Parse(port));
 });
+
 
 var app = builder.Build();
 
@@ -93,5 +88,6 @@ app.MapPost("/api/login-debug", async (LoginRequest request, IConfiguration conf
     return Results.Ok(count > 0);
 });
 
-
+app.UseAuthorization();
+app.MapControllers();
 app.Run();
