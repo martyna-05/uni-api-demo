@@ -12,6 +12,23 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+//  Admin login to always work
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+
+    if (!db.Users.Any())
+    {
+        db.Users.Add(new Users
+        {
+            Username = "admin",
+            Password = "admin"
+        });
+        db.SaveChanges();
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
