@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RfidApi.Models;
+using System.Linq; // ✅ REQUIRED for Any()
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +13,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//  Admin login to always work
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     db.Database.EnsureCreated();
 
     if (!db.Users.Any())
@@ -25,6 +26,7 @@ using (var scope = app.Services.CreateScope())
             Username = "admin",
             Password = "admin"
         });
+
         db.SaveChanges();
     }
 }
@@ -45,9 +47,15 @@ app.MapPost("/login", async (LoginRequest request, AppDbContext db) =>
         u.Password == request.Password);
 
     if (user == null)
-        return Results.Unauthorized();
+    {
+        return Results.Json(
+            new { success = false },
+            statusCode: StatusCodes.Status401Unauthorized
+        );
+    }
 
-    return Results.Ok("Login successful");
+    return Results.Ok(new { success = true });
 });
+
 
 app.Run();
